@@ -137,6 +137,7 @@ class AudioBookShelfProduction(Production):
 class AudioBookShelfPublisher(BasePublisher):
 
     input_types = {
+        "mp3_path": Path,
         "title": str,
         "library": str,
         "author": str,
@@ -241,7 +242,11 @@ class AudioBookShelfPublisher(BasePublisher):
             files=files,
         )
 
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except requests.HTTPError as e:
+            if response.status_code == 404:
+                raise ValueError(response.text)
 
     def process(self, production: AudioBookShelfProduction, **kwargs) -> Production:
         self._upload_file(production)
